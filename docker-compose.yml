@@ -1,0 +1,60 @@
+version: "2.1"
+services:
+  rabbitmq:
+    image: rabbitmq:3.10.7-management
+    container_name: rabbitmq
+    hostname: rabbitmq
+    restart: always
+    environment:
+      - RABBITMQ_DEFAULT_USER=rmuser
+      - RABBITMQ_DEFAULT_PASS=rmpassword
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit log_levels [{connection,error},{default,error}] disk_free_limit 2147483648
+    ports:
+      - 15672:15672
+      - 5672:5672
+    volumes:
+      - "./data:/var/lib/rabbitmq/mnesia/"
+  screener_bybit_long:
+    depends_on:
+      - rabbitmq
+    container_name: screener_bybit_long
+    restart: "on-failure"
+    environment:
+      - RMUSER=rmuser
+      - RMPASSWORD=rmpassword
+      - HOSTNAME=rabbitmq
+    ports:
+      - 77:81
+    build:
+      context: ./screener/long
+  screener_bybit_short:
+    depends_on:
+      - rabbitmq
+    container_name: screener_bybit_short
+    restart: "on-failure"
+    environment:
+      - RMUSER=rmuser
+      - RMPASSWORD=rmpassword
+      - HOSTNAME=rabbitmq
+    ports:
+      - 78:82
+    build:
+      context: ./screener/short
+  bot:
+    depends_on:
+      - rabbitmq
+      - screener_bybit_long
+      - screener_bybit_short
+    container_name: tgbot
+    environment:
+      - WEBHOOK_PATH=
+      - TOKEN=
+      - RMUSER=rmuser
+      - RMPASSWORD=rmpassword
+      - CHAT_ID=
+      - HOSTNAME=rabbitmq
+    ports:
+      - 76:80
+    build: 
+      context: "."
+  

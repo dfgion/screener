@@ -1,0 +1,10 @@
+venv/
+screener/
+Dockerfile
+docker-compose.yml
+.gitignore
+.dockerignore
+__pycache__
+test.py
+test2.py
+test3.py
